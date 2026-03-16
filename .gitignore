@@ -1,0 +1,13 @@
+# DuckDB databases
+*.duckdb
+*.duckdb.wal
+
+# Python
+__pycache__/
+*.pyc
+
+# Generated chart images
+charts/
+
+# Claude config
+.claude/
