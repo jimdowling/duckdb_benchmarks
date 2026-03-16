@@ -97,7 +97,11 @@ def _make_layout(title: str, show_legend: bool = False) -> dict:
         "margin": {"t": 60, "b": 80, "l": 70, "r": 30},
     }
     if show_legend:
-        layout["legend"] = {"orientation": "h", "y": -0.15, "x": 0.5, "xanchor": "center"}
+        layout["legend"] = {
+            "x": 0.02, "y": 0.98, "xanchor": "left", "yanchor": "top",
+            "bgcolor": "rgba(26,26,46,0.8)", "bordercolor": "#2a2a4a",
+            "borderwidth": 1, "font": {"size": 12},
+        }
     return layout
 
 
