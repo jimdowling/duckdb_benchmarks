@@ -8,11 +8,12 @@ Based on the blog post: [How Far Can DuckDB Go Without a Cloud Warehouse?](https
 
 ```
 duckster/
-├── benchmark.py          # Main benchmark runner (1K → 50M records)
-├── duckdb_manager.py     # DuckDB connection, schema, and insert operations
-├── queries.py            # Analytical queries: percentiles, rank deltas, aggregations
-├── serp_queries.py       # 2,500+ search query templates for data generation
-├── create_dashboard.py   # Hopsworks dashboard with benchmark result charts
+├── duckdb/
+│   ├── benchmark.py          # Main benchmark runner (1K → 50M records)
+│   ├── duckdb_manager.py     # DuckDB connection, schema, and insert operations
+│   ├── queries.py            # Analytical queries: percentiles, rank deltas, aggregations
+│   ├── serp_queries.py       # 2,500+ search query templates for data generation
+│   └── create_dashboard.py   # Hopsworks dashboard with benchmark result charts
 └── data/
     ├── serp_data.duckdb                      # DuckDB database (generated)
     └── benchmark_results_<timestamp>.json    # Benchmark results (generated)
@@ -22,16 +23,16 @@ duckster/
 
 ```bash
 # Run the full benchmark (1K to 50M records)
-python benchmark.py
+python duckdb/benchmark.py
 
 # Run with specific record counts
-python benchmark.py --counts 10000 100000 1000000
+python duckdb/benchmark.py --counts 10000 100000 1000000
 
 # Skip real SERP data fetching (synthetic only)
-python benchmark.py --skip-serp
+python duckdb/benchmark.py --skip-serp
 
 # Save results to a specific file
-python benchmark.py --output data/my_results.json
+python duckdb/benchmark.py --output data/my_results.json
 ```
 
 ## What It Measures
@@ -84,23 +85,22 @@ Upload benchmark results to Hopsworks and create an interactive dashboard:
 
 ```bash
 # Uses the latest results file in data/
-python create_dashboard.py
+python duckdb/create_dashboard.py
 
 # Or specify a results file
-python create_dashboard.py --results data/benchmark_results_20260316_061801.json
+python duckdb/create_dashboard.py --results data/benchmark_results_20260316_061801.json
 
 # Custom dashboard name
-python create_dashboard.py --dashboard-name "My Benchmark Dashboard"
+python duckdb/create_dashboard.py --dashboard-name "My Benchmark Dashboard"
 ```
 
 This creates:
-1. A **feature group** (`benchmark_results`) with the benchmark data
-2. Four **charts** (one per row, full-width):
-   - Percentile Query Latency vs Record Count (line)
-   - Delta Query Latency vs Record Count (line)
-   - Aggregation Query Latency vs Record Count (line)
-   - Memory Usage vs Record Count (bar)
-3. A **dashboard** in the Hopsworks UI
+1. Four **charts** (one per row, full-width):
+   - All Queries combined (Percentile, Window Function, Aggregation)
+   - Percentile Query latency
+   - Window Function Query latency
+   - Aggregation Query latency
+2. A **dashboard** in the Hopsworks UI
 
 ## Data Generation
 

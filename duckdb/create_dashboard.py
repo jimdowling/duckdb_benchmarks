@@ -227,7 +227,7 @@ def main():
     if args.results:
         results_path = args.results
     else:
-        data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+        data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
         result_files = sorted(
             f for f in os.listdir(data_dir)
             if f.startswith("benchmark_results_") and f.endswith(".json")
