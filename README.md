@@ -2,6 +2,8 @@
 
 DuckDB performance benchmark for SERP (Search Engine Results Page) data at scale. Tests query latency and memory usage from 1K to 50M records.
 
+Based on the blog post: [How Far Can DuckDB Go Without a Cloud Warehouse?](https://levelup.gitconnected.com/the-practical-limits-of-duckdb-on-commodity-hardware-3d6d6cf2bdde)
+
 ## Project Structure
 
 ```
