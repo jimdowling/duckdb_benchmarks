@@ -1,6 +1,7 @@
-# DuckDB databases
+# Data files
 *.duckdb
 *.duckdb.wal
+*.parquet
 
 # Python
 __pycache__/
