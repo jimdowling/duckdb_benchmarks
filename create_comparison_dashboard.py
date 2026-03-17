@@ -40,8 +40,11 @@ PLOTLY_TEMPLATE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <style>
-  body {{ margin: 0; padding: 0; background: #1a1a2e; }}
-  #chart {{ width: 100vw; height: 100vh; }}
+  body {{ margin: 0; padding: 0; background: #1a1a2e; overflow: visible; }}
+  #chart {{ width: 100vw; height: 100vh; overflow: visible; }}
+  /* Prevent Plotly SVG from clipping the legend */
+  .main-svg, .main-svg .draglayer, .main-svg .layer-above {{ overflow: visible !important; }}
+  svg {{ overflow: visible !important; }}
 </style>
 </head>
 <body>
@@ -222,7 +225,7 @@ def main():
         sys.exit(1)
 
     for i, cid in enumerate(chart_ids):
-        run_hops(f"hops dashboard add-chart {dashboard_id} --chart-id {cid} --width 12 --height 10 --x 0 --y {i * 10}")
+        run_hops(f"hops dashboard add-chart {dashboard_id} --chart-id {cid} --width 24 --height 10 --x 0 --y {i * 10}")
 
     print(f"\nDashboard '{dashboard_name}' (ID: {dashboard_id}) — {len(chart_ids)} charts")
     print(run_hops(f"hops dashboard info {dashboard_id}"))
