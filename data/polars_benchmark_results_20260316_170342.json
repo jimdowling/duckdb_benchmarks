@@ -1,0 +1,137 @@
+{
+  "timestamp": "2026-03-16T17:04:11.883969",
+  "results": [
+    {
+      "record_count": 1000,
+      "percentile_seconds": 0.0029692649841308594,
+      "delta_seconds": 0.004076957702636719,
+      "aggregation_seconds": 0.0034461021423339844,
+      "memory_delta_mb": 10.078125,
+      "memory_after_mb": 4376.4296875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 5000,
+      "percentile_seconds": 0.003268003463745117,
+      "delta_seconds": 0.00785684585571289,
+      "aggregation_seconds": 0.0041043758392333984,
+      "memory_delta_mb": -2.48828125,
+      "memory_after_mb": 4373.94140625,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 10000,
+      "percentile_seconds": 0.00395965576171875,
+      "delta_seconds": 0.014328718185424805,
+      "aggregation_seconds": 0.004419565200805664,
+      "memory_delta_mb": -0.76171875,
+      "memory_after_mb": 4373.1796875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 20000,
+      "percentile_seconds": 0.004214763641357422,
+      "delta_seconds": 0.01921844482421875,
+      "aggregation_seconds": 0.004224300384521484,
+      "memory_delta_mb": -0.2421875,
+      "memory_after_mb": 4372.9375,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 50000,
+      "percentile_seconds": 0.0061075687408447266,
+      "delta_seconds": 0.04546761512756348,
+      "aggregation_seconds": 0.00551605224609375,
+      "memory_delta_mb": 2.55078125,
+      "memory_after_mb": 4375.48828125,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 100000,
+      "percentile_seconds": 0.008634805679321289,
+      "delta_seconds": 0.08844351768493652,
+      "aggregation_seconds": 0.007011890411376953,
+      "memory_delta_mb": 12.9375,
+      "memory_after_mb": 4388.42578125,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 200000,
+      "percentile_seconds": 0.013066768646240234,
+      "delta_seconds": 0.15787553787231445,
+      "aggregation_seconds": 0.01238870620727539,
+      "memory_delta_mb": 16.15234375,
+      "memory_after_mb": 4404.578125,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 500000,
+      "percentile_seconds": 0.04043412208557129,
+      "delta_seconds": 0.4396190643310547,
+      "aggregation_seconds": 0.04383730888366699,
+      "memory_delta_mb": 10.0234375,
+      "memory_after_mb": 4414.6015625,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 1000000,
+      "percentile_seconds": 0.0828702449798584,
+      "delta_seconds": 0.9124019145965576,
+      "aggregation_seconds": 0.09668898582458496,
+      "memory_delta_mb": 5.83203125,
+      "memory_after_mb": 4420.43359375,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 2000000,
+      "percentile_seconds": 0.16155338287353516,
+      "delta_seconds": 1.8018882274627686,
+      "aggregation_seconds": 0.1817612648010254,
+      "memory_delta_mb": -27.109375,
+      "memory_after_mb": 4393.32421875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 5000000,
+      "percentile_seconds": 0.38350701332092285,
+      "delta_seconds": 4.5237250328063965,
+      "aggregation_seconds": 0.47193026542663574,
+      "memory_delta_mb": -201.65625,
+      "memory_after_mb": 4191.66796875,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 10000000,
+      "percentile_seconds": 0.7809967994689941,
+      "delta_seconds": 9.334803819656372,
+      "aggregation_seconds": 0.9920003414154053,
+      "memory_delta_mb": 24.46484375,
+      "memory_after_mb": 4216.1328125,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    }
+  ]
+}

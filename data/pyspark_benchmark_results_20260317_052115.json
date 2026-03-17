@@ -1,0 +1,203 @@
+{
+  "timestamp": "2026-03-17T05:23:34.813130",
+  "results": [
+    {
+      "record_count": 1000,
+      "percentile_seconds": 0.47632265090942383,
+      "delta_seconds": 0.4230947494506836,
+      "aggregation_seconds": 0.6004161834716797,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 5000,
+      "percentile_seconds": 0.34192538261413574,
+      "delta_seconds": 0.32010459899902344,
+      "aggregation_seconds": 0.35585570335388184,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 10000,
+      "percentile_seconds": 0.5913610458374023,
+      "delta_seconds": 0.5118575096130371,
+      "aggregation_seconds": 0.3782064914703369,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 20000,
+      "percentile_seconds": 0.4037601947784424,
+      "delta_seconds": 0.3825206756591797,
+      "aggregation_seconds": 0.5007140636444092,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 50000,
+      "percentile_seconds": 0.3148469924926758,
+      "delta_seconds": 0.4285709857940674,
+      "aggregation_seconds": 0.340961217880249,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 100000,
+      "percentile_seconds": 0.342252254486084,
+      "delta_seconds": 0.49706435203552246,
+      "aggregation_seconds": 0.43658876419067383,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 200000,
+      "percentile_seconds": 0.36125755310058594,
+      "delta_seconds": 0.5432262420654297,
+      "aggregation_seconds": 0.29359865188598633,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 500000,
+      "percentile_seconds": 0.45244884490966797,
+      "delta_seconds": 1.149310827255249,
+      "aggregation_seconds": 0.34268641471862793,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 1000000,
+      "percentile_seconds": 0.6830697059631348,
+      "delta_seconds": 1.8844752311706543,
+      "aggregation_seconds": 0.33487439155578613,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 2000000,
+      "percentile_seconds": 0.45632076263427734,
+      "delta_seconds": 3.175045967102051,
+      "aggregation_seconds": 0.4662144184112549,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 5000000,
+      "percentile_seconds": 0.7152280807495117,
+      "delta_seconds": 6.5200464725494385,
+      "aggregation_seconds": 0.6447310447692871,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 10000000,
+      "percentile_seconds": 1.0022869110107422,
+      "delta_seconds": 8.935884714126587,
+      "aggregation_seconds": 0.8566997051239014,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 15000000,
+      "percentile_seconds": 1.0502173900604248,
+      "delta_seconds": 10.791040182113647,
+      "aggregation_seconds": 0.9001255035400391,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 20000000,
+      "percentile_seconds": 1.9155974388122559,
+      "delta_seconds": 12.00223970413208,
+      "aggregation_seconds": 1.0150530338287354,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 25000000,
+      "percentile_seconds": 1.0980110168457031,
+      "delta_seconds": 12.912893533706665,
+      "aggregation_seconds": 1.034489631652832,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 30000000,
+      "percentile_seconds": 1.1007673740386963,
+      "delta_seconds": 14.08921480178833,
+      "aggregation_seconds": 1.048898458480835,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 40000000,
+      "percentile_seconds": 1.152923822402954,
+      "delta_seconds": 16.481487035751343,
+      "aggregation_seconds": 1.0102930068969727,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 50000000,
+      "percentile_seconds": 1.1921095848083496,
+      "delta_seconds": 16.358482599258423,
+      "aggregation_seconds": 0.9711837768554688,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    }
+  ]
+}

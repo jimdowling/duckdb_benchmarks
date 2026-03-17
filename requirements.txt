@@ -1,3 +1,4 @@
 duckdb
 polars
 psutil
+trino

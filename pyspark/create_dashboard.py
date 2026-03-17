@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Create a Hopsworks dashboard with Polars benchmark result charts.
+Create a Hopsworks dashboard with PySpark benchmark result charts.
 
 Charts:
   1. All Queries — combined line chart with Percentile, Window Function, Aggregation
-  2. Percentile Query — PERCENTILE_CONT latency
-  3. Window Function Query — LAG() latency
-  4. Aggregation Query — GROUP BY latency
+  2. Percentile Query
+  3. Window Function Query
+  4. Aggregation Query
 
 Usage:
-    python polars/create_dashboard.py
-    python polars/create_dashboard.py --results data/polars_benchmark_results_<ts>.json
+    python pyspark/create_dashboard.py
+    python pyspark/create_dashboard.py --results data/pyspark_benchmark_results_<ts>.json
 """
 
 import argparse
@@ -117,7 +117,7 @@ def create_dashboard(series: dict, dashboard_name: str):
     os.makedirs(CHART_DIR, exist_ok=True)
 
     # Combined chart
-    write_chart("polars_all_queries.html", [
+    write_chart("pyspark_all_queries.html", [
         {"type": "scatter", "mode": "lines+markers", "name": "Percentile",
          "x": series["x"], "y": series["percentile"],
          "line": {"color": COLORS["percentile"], "width": 3}, "marker": {"size": 6}},
@@ -127,30 +127,28 @@ def create_dashboard(series: dict, dashboard_name: str):
         {"type": "scatter", "mode": "lines+markers", "name": "Aggregation",
          "x": series["x"], "y": series["aggregation"],
          "line": {"color": COLORS["aggregation"], "width": 3}, "marker": {"size": 6}},
-    ], "Polars \u2014 All Queries \u2014 Time (s) vs Record Count", show_legend=True)
+    ], "PySpark \u2014 All Queries \u2014 Time (s) vs Record Count", show_legend=True)
 
-    # Individual charts
     for key, color, label in [
         ("percentile", COLORS["percentile"], "Percentile Query"),
         ("window", COLORS["window"], "Window Function Query"),
         ("aggregation", COLORS["aggregation"], "Aggregation Query"),
     ]:
-        write_chart(f"polars_{key}_query.html", [
+        write_chart(f"pyspark_{key}_query.html", [
             {"type": "scatter", "mode": "lines+markers", "name": label,
              "x": series["x"], "y": series[key],
              "line": {"color": color, "width": 3}, "marker": {"size": 7}},
-        ], f"Polars \u2014 {label} \u2014 Time (s) vs Record Count")
+        ], f"PySpark \u2014 {label} \u2014 Time (s) vs Record Count")
 
-    # Register charts
     chart_defs = [
-        ("Polars \u2014 All Queries", "Resources/charts/polars_all_queries.html",
-         "Combined: Percentile, Window Function, Aggregation (Polars, 1K\u201350M rows)"),
-        ("Polars \u2014 Percentile Query", "Resources/charts/polars_percentile_query.html",
-         "Polars quantile query latency (1K\u201350M rows)"),
-        ("Polars \u2014 Window Function Query", "Resources/charts/polars_window_query.html",
-         "Polars shift/over window function latency (1K\u201350M rows)"),
-        ("Polars \u2014 Aggregation Query", "Resources/charts/polars_aggregation_query.html",
-         "Polars group_by aggregation latency (1K\u201350M rows)"),
+        ("PySpark \u2014 All Queries", "Resources/charts/pyspark_all_queries.html",
+         "Combined: Percentile, Window Function, Aggregation (PySpark, 1K\u2013100M rows)"),
+        ("PySpark \u2014 Percentile Query", "Resources/charts/pyspark_percentile_query.html",
+         "PySpark percentile_approx query latency (1K\u2013100M rows)"),
+        ("PySpark \u2014 Window Function Query", "Resources/charts/pyspark_window_query.html",
+         "PySpark LAG window function latency (1K\u2013100M rows)"),
+        ("PySpark \u2014 Aggregation Query", "Resources/charts/pyspark_aggregation_query.html",
+         "PySpark groupBy aggregation latency (1K\u2013100M rows)"),
     ]
 
     chart_ids = []
@@ -162,7 +160,6 @@ def create_dashboard(series: dict, dashboard_name: str):
                 chart_ids.append(int(word.rstrip(")")))
                 break
 
-    # Create dashboard
     output = run_hops(f'hops dashboard create "{dashboard_name}"')
     print(output)
     dashboard_id = None
@@ -181,9 +178,9 @@ def create_dashboard(series: dict, dashboard_name: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Create Hopsworks dashboard from Polars benchmark results")
+    parser = argparse.ArgumentParser(description="Create Hopsworks dashboard from PySpark benchmark results")
     parser.add_argument("--results", type=str, default=None, help="Path to results JSON")
-    parser.add_argument("--dashboard-name", type=str, default="Polars Benchmark Results")
+    parser.add_argument("--dashboard-name", type=str, default="PySpark Benchmark Results")
     args = parser.parse_args()
 
     if args.results:
@@ -192,10 +189,10 @@ def main():
         data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
         result_files = sorted(
             f for f in os.listdir(data_dir)
-            if f.startswith("polars_benchmark_results_") and f.endswith(".json")
+            if f.startswith("pyspark_benchmark_results_") and f.endswith(".json")
         )
         if not result_files:
-            print("No Polars benchmark results found in data/. Run polars/benchmark.py first.")
+            print("No PySpark benchmark results found in data/. Run pyspark/benchmark.py first.")
             sys.exit(1)
         results_path = os.path.join(data_dir, result_files[-1])
         print(f"Using latest results: {results_path}")
