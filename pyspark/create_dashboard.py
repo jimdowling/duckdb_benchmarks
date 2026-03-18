@@ -171,7 +171,7 @@ def create_dashboard(series: dict, dashboard_name: str):
         sys.exit(1)
 
     for i, cid in enumerate(chart_ids):
-        run_hops(f"hops dashboard add-chart {dashboard_id} --chart-id {cid} --width 12 --height 10 --x 0 --y {i * 10}")
+        run_hops(f"hops dashboard add-chart {dashboard_id} --chart-id {cid} --width 24 --height 10 --x 0 --y {i * 10}")
 
     print(f"\nDashboard '{dashboard_name}' (ID: {dashboard_id}) — {len(chart_ids)} charts")
     print(run_hops(f"hops dashboard info {dashboard_id}"))

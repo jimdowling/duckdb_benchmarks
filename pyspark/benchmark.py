@@ -26,7 +26,7 @@ def create_spark_session():
     # Only set driver memory when not using Spark Connect (server-side config)
     if not os.environ.get("SPARK_REMOTE"):
         builder = builder.config("spark.driver.memory", "8g")
-    builder = builder.config("spark.sql.shuffle.partitions", "8")
+    builder = builder.config("spark.sql.shuffle.partitions", "32")
     return builder.getOrCreate()
 
 
@@ -129,9 +129,10 @@ def run_benchmark(spark, data_path, test_counts=None):
             25000000, 30000000, 40000000, 50000000, 100000000,
         ]
 
-    print(f"Loading data from {data_path}...")
+    max_needed = max(test_counts)
+    print(f"Loading data from {data_path} (limiting to {max_needed:,} rows)...")
     load_start = time.time()
-    full_df = spark.read.parquet(data_path)
+    full_df = spark.read.parquet(data_path).filter(F.col("id") <= max_needed)
     full_df.cache()
     total_rows = full_df.count()
     load_time = time.time() - load_start
