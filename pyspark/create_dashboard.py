@@ -34,8 +34,10 @@ PLOTLY_TEMPLATE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <style>
-  body {{ margin: 0; padding: 0; background: #1a1a2e; }}
-  #chart {{ width: 100vw; height: 100vh; }}
+  body {{ margin: 0; padding: 0; background: #1a1a2e; overflow: visible; }}
+  #chart {{ width: 100vw; height: 100vh; overflow: visible; }}
+  .main-svg, .main-svg .draglayer, .main-svg .layer-above {{ overflow: visible !important; }}
+  svg {{ overflow: visible !important; }}
 </style>
 </head>
 <body>
@@ -80,16 +82,15 @@ def _make_layout(title: str, show_legend: bool = False) -> dict:
         "font": {"color": "#c0c0c0"},
         "xaxis": {"gridcolor": "#2a2a4a", "title": {"text": "Record Count"}},
         "yaxis": {"gridcolor": "#2a2a4a", "title": {"text": "Query Time (seconds)"}},
-        "margin": {"t": 80, "b": 80, "l": 70, "r": 30},
-    }
-    if show_legend:
-        layout["showlegend"] = True
-        layout["legend"] = {
+        "showlegend": show_legend,
+        "legend": {
             "orientation": "v",
-            "x": 0.01, "y": 0.99, "xanchor": "left", "yanchor": "top",
+            "x": 1.02, "y": 1, "xanchor": "left", "yanchor": "top",
             "bgcolor": "rgba(22,33,62,0.9)", "bordercolor": "#2a2a4a",
             "borderwidth": 1, "font": {"size": 13, "color": "#e0e0e0"},
-        }
+        },
+        "margin": {"t": 80, "b": 80, "l": 70, "r": 200 if show_legend else 30},
+    }
     return layout
 
 

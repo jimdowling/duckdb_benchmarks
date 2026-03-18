@@ -93,11 +93,11 @@ def _make_layout(title):
         "showlegend": True,
         "legend": {
             "orientation": "v",
-            "x": 0.01, "y": 0.99, "xanchor": "left", "yanchor": "top",
+            "x": 1.02, "y": 1, "xanchor": "left", "yanchor": "top",
             "bgcolor": "rgba(22,33,62,0.9)", "bordercolor": "#2a2a4a",
             "borderwidth": 1, "font": {"size": 12, "color": "#e0e0e0"},
         },
-        "margin": {"t": 80, "b": 80, "l": 70, "r": 30},
+        "margin": {"t": 80, "b": 80, "l": 70, "r": 250},
     }
 
 
