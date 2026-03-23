@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-03-23T18:27:43.838819",
+  "results": [
+    {
+      "record_count": 100000000,
+      "status": "error",
+      "error": "TrinoQueryError(type=INSUFFICIENT_RESOURCES, name=EXCEEDED_GLOBAL_MEMORY_LIMIT, message=\"Query exceeded distributed user memory limit of 4GB\", query_id=20260323_182737_00059_mbnck)"
+    }
+  ]
+}

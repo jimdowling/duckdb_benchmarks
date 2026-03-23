@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-03-23T17:55:24.418446",
+  "results": [
+    {
+      "record_count": 1000000,
+      "percentile_seconds": 4.453310012817383,
+      "delta_seconds": 3.962953567504883,
+      "aggregation_seconds": 2.8745687007904053,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 5000000,
+      "percentile_seconds": 4.985338449478149,
+      "delta_seconds": 3.104013681411743,
+      "aggregation_seconds": 8.545232057571411,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 10000000,
+      "percentile_seconds": 5.551685094833374,
+      "delta_seconds": 5.879164934158325,
+      "aggregation_seconds": 9.802578926086426,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    }
+  ]
+}

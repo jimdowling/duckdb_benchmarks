@@ -1,0 +1,65 @@
+{
+  "timestamp": "2026-03-23T18:17:48.323213",
+  "results": [
+    {
+      "record_count": 1000000,
+      "percentile_seconds": 3.114248037338257,
+      "delta_seconds": 3.43218994140625,
+      "aggregation_seconds": 2.7846550941467285,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 5000000,
+      "percentile_seconds": 4.708822011947632,
+      "delta_seconds": 3.5784289836883545,
+      "aggregation_seconds": 7.734985589981079,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 10000000,
+      "percentile_seconds": 5.494546175003052,
+      "delta_seconds": 4.512767314910889,
+      "aggregation_seconds": 8.164242029190063,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 25000000,
+      "percentile_seconds": 7.406107664108276,
+      "delta_seconds": 7.556683301925659,
+      "aggregation_seconds": 10.589890956878662,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 50000000,
+      "percentile_seconds": 10.029110193252563,
+      "delta_seconds": 13.014624118804932,
+      "aggregation_seconds": 12.158818483352661,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 100000000,
+      "status": "error",
+      "error": "TrinoQueryError(type=INSUFFICIENT_RESOURCES, name=EXCEEDED_GLOBAL_MEMORY_LIMIT, message=\"Query exceeded distributed user memory limit of 4GB\", query_id=20260323_181742_00056_mbnck)"
+    }
+  ]
+}

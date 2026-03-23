@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Create a Hopsworks dashboard with Trino benchmark charts AND a 3-framework
-comparison dashboard (DuckDB vs Polars vs Trino).
+Create a Hopsworks dashboard with Trino benchmark charts AND a 4-framework
+comparison dashboard (DuckDB vs Polars vs PySpark vs Trino).
 
 Charts for the Trino dashboard:
   1. All Queries — combined line chart
@@ -10,10 +10,10 @@ Charts for the Trino dashboard:
   4. Aggregation Query
 
 Charts for the comparison dashboard:
-  1. Percentile Query — DuckDB vs Polars vs Trino
-  2. Window Function Query — DuckDB vs Polars vs Trino
-  3. Aggregation Query — DuckDB vs Polars vs Trino
-  4. All Queries — DuckDB vs Polars vs Trino
+  1. Percentile Query — DuckDB vs Polars vs PySpark vs Trino
+  2. Window Function Query — DuckDB vs Polars vs PySpark vs Trino
+  3. Aggregation Query — DuckDB vs Polars vs PySpark vs Trino
+  4. Total Query Time — DuckDB vs Polars vs PySpark vs Trino
 
 Usage:
     python trino_db/create_dashboard.py
@@ -35,6 +35,7 @@ COLORS = {
     "aggregation": "#ffd93d",
     "duckdb": "#4ecdc4",
     "polars": "#ff6b6b",
+    "pyspark": "#ff9f43",
     "trino": "#a29bfe",
 }
 
@@ -228,12 +229,13 @@ def create_trino_dashboard(series: dict, dashboard_name: str):
     return dashboard_id
 
 
-def create_comparison_dashboard(trino: dict, duckdb: dict, polars: dict):
-    """Create a 3-framework comparison dashboard replacing the old one."""
+def create_comparison_dashboard(trino: dict, duckdb: dict, polars: dict, pyspark: dict):
+    """Create a 4-framework comparison dashboard replacing the old one."""
     os.makedirs(CHART_DIR, exist_ok=True)
 
-    # Use numeric x-values so different data points sort correctly on the axis
-    # Per-query comparison charts
+    engines_label = "DuckDB vs Polars vs PySpark vs Trino"
+
+    # Per-query comparison charts (numeric x-axis for proper sorting)
     for key, label in [
         ("percentile", "Percentile Query"),
         ("window", "Window Function Query"),
@@ -246,10 +248,13 @@ def create_comparison_dashboard(trino: dict, duckdb: dict, polars: dict):
             {"type": "scatter", "mode": "lines+markers", "name": "Polars",
              "x": polars["x_numeric"], "y": polars[key],
              "line": {"color": COLORS["polars"], "width": 3}, "marker": {"size": 6}},
+            {"type": "scatter", "mode": "lines+markers", "name": "PySpark",
+             "x": pyspark["x_numeric"], "y": pyspark[key],
+             "line": {"color": COLORS["pyspark"], "width": 3}, "marker": {"size": 6}},
             {"type": "scatter", "mode": "lines+markers", "name": "Trino",
              "x": trino["x_numeric"], "y": trino[key],
              "line": {"color": COLORS["trino"], "width": 3}, "marker": {"size": 6}},
-        ], f"{label} \u2014 DuckDB vs Polars vs Trino", show_legend=True, numeric_xaxis=True)
+        ], f"{label} \u2014 {engines_label}", show_legend=True, numeric_xaxis=True)
 
     # Combined "all queries" comparison — show total time per framework
     def _safe_total(p, w, a):
@@ -258,6 +263,7 @@ def create_comparison_dashboard(trino: dict, duckdb: dict, polars: dict):
 
     duckdb_total = [_safe_total(p, w, a) for p, w, a in zip(duckdb["percentile"], duckdb["window"], duckdb["aggregation"])]
     polars_total = [_safe_total(p, w, a) for p, w, a in zip(polars["percentile"], polars["window"], polars["aggregation"])]
+    pyspark_total = [_safe_total(p, w, a) for p, w, a in zip(pyspark["percentile"], pyspark["window"], pyspark["aggregation"])]
     trino_total = [_safe_total(p, w, a) for p, w, a in zip(trino["percentile"], trino["window"], trino["aggregation"])]
 
     write_chart("comparison_total.html", [
@@ -267,24 +273,27 @@ def create_comparison_dashboard(trino: dict, duckdb: dict, polars: dict):
         {"type": "scatter", "mode": "lines+markers", "name": "Polars",
          "x": polars["x_numeric"], "y": polars_total,
          "line": {"color": COLORS["polars"], "width": 3}, "marker": {"size": 6}},
+        {"type": "scatter", "mode": "lines+markers", "name": "PySpark",
+         "x": pyspark["x_numeric"], "y": pyspark_total,
+         "line": {"color": COLORS["pyspark"], "width": 3}, "marker": {"size": 6}},
         {"type": "scatter", "mode": "lines+markers", "name": "Trino",
          "x": trino["x_numeric"], "y": trino_total,
          "line": {"color": COLORS["trino"], "width": 3}, "marker": {"size": 6}},
-    ], "Total Query Time \u2014 DuckDB vs Polars vs Trino", show_legend=True)
+    ], f"Total Query Time \u2014 {engines_label}", show_legend=True, numeric_xaxis=True)
 
     chart_defs = [
-        ("Percentile Query \u2014 DuckDB vs Polars vs Trino",
+        (f"Percentile Query \u2014 {engines_label}",
          "Resources/charts/comparison_percentile.html",
-         "Percentile query latency comparison across all 3 frameworks"),
-        ("Window Function Query \u2014 DuckDB vs Polars vs Trino",
+         "Percentile query latency comparison across all 4 frameworks"),
+        (f"Window Function Query \u2014 {engines_label}",
          "Resources/charts/comparison_window.html",
-         "Window function query latency comparison across all 3 frameworks"),
-        ("Aggregation Query \u2014 DuckDB vs Polars vs Trino",
+         "Window function query latency comparison across all 4 frameworks"),
+        (f"Aggregation Query \u2014 {engines_label}",
          "Resources/charts/comparison_aggregation.html",
-         "Aggregation query latency comparison across all 3 frameworks"),
-        ("Total Query Time \u2014 DuckDB vs Polars vs Trino",
+         "Aggregation query latency comparison across all 4 frameworks"),
+        (f"Total Query Time \u2014 {engines_label}",
          "Resources/charts/comparison_total.html",
-         "Sum of all 3 queries — total latency comparison"),
+         "Sum of all 3 queries \u2014 total latency comparison across 4 frameworks"),
     ]
 
     chart_ids = []
@@ -293,7 +302,7 @@ def create_comparison_dashboard(trino: dict, duckdb: dict, polars: dict):
         print(output)
         chart_ids.append(parse_id(output))
 
-    dashboard_name = "DuckDB vs Polars vs Trino Comparison"
+    dashboard_name = f"{engines_label} Comparison"
     output = run_hops(f'hops dashboard create "{dashboard_name}"')
     print(output)
     dashboard_id = parse_id(output)
@@ -311,6 +320,7 @@ def main():
     parser.add_argument("--results", type=str, default=None, help="Path to Trino results JSON")
     parser.add_argument("--duckdb-results", type=str, default=None, help="Path to DuckDB results JSON")
     parser.add_argument("--polars-results", type=str, default=None, help="Path to Polars results JSON")
+    parser.add_argument("--pyspark-results", type=str, default=None, help="Path to PySpark results JSON")
     parser.add_argument("--skip-trino-dashboard", action="store_true", help="Skip creating Trino-only dashboard")
     parser.add_argument("--skip-comparison", action="store_true", help="Skip creating comparison dashboard")
     parser.add_argument("--delete-old-comparison", type=int, default=None,
@@ -338,26 +348,34 @@ def main():
     if not args.skip_trino_dashboard:
         create_trino_dashboard(trino_series, "Trino Benchmark Results")
 
-    # Create comparison dashboard
+    # Create 4-framework comparison dashboard
     if not args.skip_comparison:
         duckdb_path = args.duckdb_results or find_latest_results("benchmark_results_duckdb")
         polars_path = args.polars_results or find_latest_results("polars_benchmark_results_")
+        pyspark_path = args.pyspark_results or find_latest_results("pyspark_benchmark_results_")
 
+        missing = []
         if not duckdb_path or not os.path.exists(duckdb_path):
-            print("No DuckDB results found. Skipping comparison dashboard.")
-        elif not polars_path or not os.path.exists(polars_path):
-            print("No Polars results found. Skipping comparison dashboard.")
+            missing.append("DuckDB")
+        if not polars_path or not os.path.exists(polars_path):
+            missing.append("Polars")
+        if not pyspark_path or not os.path.exists(pyspark_path):
+            missing.append("PySpark")
+
+        if missing:
+            print(f"No results found for: {', '.join(missing)}. Skipping comparison dashboard.")
         else:
             duckdb_series = load_benchmark_results(duckdb_path)
             polars_series = load_benchmark_results(polars_path)
+            pyspark_series = load_benchmark_results(pyspark_path)
 
             # Delete old comparison dashboard if requested
             if args.delete_old_comparison:
                 print(f"\nDeleting old comparison dashboard (ID: {args.delete_old_comparison})...")
                 delete_dashboard(args.delete_old_comparison)
 
-            print("\nCreating 3-framework comparison dashboard...")
-            create_comparison_dashboard(trino_series, duckdb_series, polars_series)
+            print("\nCreating 4-framework comparison dashboard...")
+            create_comparison_dashboard(trino_series, duckdb_series, polars_series, pyspark_series)
 
     print("\nDone!")
 

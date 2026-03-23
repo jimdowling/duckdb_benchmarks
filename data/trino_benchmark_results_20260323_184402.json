@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-03-23T18:45:02.497987",
+  "results": [
+    {
+      "record_count": 100000000,
+      "percentile_seconds": 22.702295303344727,
+      "delta_seconds": null,
+      "aggregation_seconds": 27.993447065353394,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "partial"
+    }
+  ]
+}

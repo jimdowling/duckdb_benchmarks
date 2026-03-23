@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-03-23T18:14:02.700435",
+  "results": [
+    {
+      "record_count": 1000000,
+      "percentile_seconds": 0.9808247089385986,
+      "delta_seconds": 0.6087965965270996,
+      "aggregation_seconds": 1.6388425827026367,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 5000000,
+      "percentile_seconds": 3.118422508239746,
+      "delta_seconds": 3.4968507289886475,
+      "aggregation_seconds": 6.2942283153533936,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 10000000,
+      "percentile_seconds": 5.191380262374878,
+      "delta_seconds": 4.898160457611084,
+      "aggregation_seconds": 7.854980230331421,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 25000000,
+      "status": "error",
+      "error": "TrinoQueryError(type=INSUFFICIENT_RESOURCES, name=EXCEEDED_LOCAL_MEMORY_LIMIT, message=\"Query exceeded per-node memory limit of 1GB [Allocated: 1023.10MB, Delta: 1.18MB, Top Consumers: {PagesToPagesIndexes=1001.82MB, FilterAndProjectOperator=19.89MB, TopNProcessor=1.39MB}]\", query_id=20260323_181357_00038_mbnck)"
+    }
+  ]
+}

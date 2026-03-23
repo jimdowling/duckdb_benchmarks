@@ -1,0 +1,71 @@
+{
+  "timestamp": "2026-03-23T18:31:06.163259",
+  "results": [
+    {
+      "record_count": 1000000,
+      "percentile_seconds": 0.9922482967376709,
+      "delta_seconds": 0.9360418319702148,
+      "aggregation_seconds": 1.9017274379730225,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 5000000,
+      "percentile_seconds": 4.3192267417907715,
+      "delta_seconds": 2.954197406768799,
+      "aggregation_seconds": 7.883711576461792,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 10000000,
+      "percentile_seconds": 5.292191743850708,
+      "delta_seconds": 5.242511749267578,
+      "aggregation_seconds": 9.45880913734436,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 25000000,
+      "percentile_seconds": 6.3345372676849365,
+      "delta_seconds": 7.455413579940796,
+      "aggregation_seconds": 11.12499213218689,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 50000000,
+      "percentile_seconds": 9.664414644241333,
+      "delta_seconds": 14.795401096343994,
+      "aggregation_seconds": 12.980129480361938,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 100000000,
+      "percentile_seconds": 17.919095277786255,
+      "delta_seconds": null,
+      "aggregation_seconds": 23.924203872680664,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "partial"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-03-23T18:12:19.730768",
+  "results": [
+    {
+      "record_count": 1000000,
+      "percentile_seconds": 1.099189281463623,
+      "delta_seconds": 0.70426344871521,
+      "aggregation_seconds": 1.5717015266418457,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 5000000,
+      "percentile_seconds": 3.368945598602295,
+      "delta_seconds": 4.130287408828735,
+      "aggregation_seconds": 6.650715589523315,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 10000000,
+      "percentile_seconds": 5.365605592727661,
+      "delta_seconds": 5.732773780822754,
+      "aggregation_seconds": 9.44171953201294,
+      "memory_delta_mb": 0.0,
+      "memory_after_mb": 0.0,
+      "disk_read_mb": 0.0,
+      "disk_write_mb": 0.0,
+      "status": "success"
+    },
+    {
+      "record_count": 25000000,
+      "status": "error",
+      "error": "TrinoQueryError(type=INSUFFICIENT_RESOURCES, name=EXCEEDED_LOCAL_MEMORY_LIMIT, message=\"Query exceeded per-node memory limit of 1GB [Allocated: 1023.96MB, Delta: 94.45kB, Top Consumers: {PagesToPagesIndexes=1001.82MB, FilterAndProjectOperator=21.03MB, TopNProcessor=1.11MB}]\", query_id=20260323_181140_00022_mbnck)"
+    },
+    {
+      "record_count": 50000000,
+      "status": "error",
+      "error": "TrinoQueryError(type=INSUFFICIENT_RESOURCES, name=EXCEEDED_LOCAL_MEMORY_LIMIT, message=\"Query exceeded per-node memory limit of 1GB [Allocated: 1021.48MB, Delta: 8.34MB, Top Consumers: {PagesToPagesIndexes=858.02MB, ScanFilterAndProjectOperator=126.19MB, LazyOutputBuffer=32.56MB}]\", query_id=20260323_181158_00024_mbnck)"
+    },
+    {
+      "record_count": 100000000,
+      "status": "error",
+      "error": "TrinoQueryError(type=INSUFFICIENT_RESOURCES, name=EXCEEDED_LOCAL_MEMORY_LIMIT, message=\"Query exceeded per-node memory limit of 1GB [Allocated: 1022.77MB, Delta: 1.86MB, Top Consumers: {PagesToPagesIndexes=727.96MB, ScanFilterAndProjectOperator=252.39MB, LazyOutputBuffer=31.43MB}]\", query_id=20260323_181216_00026_mbnck)"
+    }
+  ]
+}
