@@ -98,7 +98,7 @@ def _make_layout(title: str, show_legend: bool = False, numeric_xaxis: bool = Fa
             "bgcolor": "rgba(22,33,62,0.9)", "bordercolor": "#2a2a4a",
             "borderwidth": 1, "font": {"size": 13, "color": "#e0e0e0"},
         },
-        "margin": {"t": 80, "b": 80, "l": 70, "r": 200 if show_legend else 30},
+        "margin": {"t": 80, "b": 80, "l": 70, "r": 300 if show_legend else 30},
     }
     return layout
 
@@ -185,7 +185,7 @@ def create_dashboard(pyspark: dict, dashboard_name: str, duckdb: dict = None, po
         })
 
     write_chart("pyspark_comparison.html", comparison_traces,
-                "Total Query Time \u2014 PySpark vs DuckDB vs Polars vs Trino",
+                "Total Query Time \u2014 PySpark",
                 show_legend=True, numeric_xaxis=True)
 
     chart_defs = [
