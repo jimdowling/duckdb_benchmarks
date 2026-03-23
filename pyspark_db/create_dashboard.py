@@ -9,8 +9,8 @@ Charts:
   4. Aggregation Query
 
 Usage:
-    python pyspark/create_dashboard.py
-    python pyspark/create_dashboard.py --results data/pyspark_benchmark_results_<ts>.json
+    python pyspark_db/create_dashboard.py
+    python pyspark_db/create_dashboard.py --results data/pyspark_benchmark_results_<ts>.json
 """
 
 import argparse
@@ -193,7 +193,7 @@ def main():
             if f.startswith("pyspark_benchmark_results_") and f.endswith(".json")
         )
         if not result_files:
-            print("No PySpark benchmark results found in data/. Run pyspark/benchmark.py first.")
+            print("No PySpark benchmark results found in data/. Run pyspark_db/benchmark.py first.")
             sys.exit(1)
         results_path = os.path.join(data_dir, result_files[-1])
         print(f"Using latest results: {results_path}")

@@ -1,32 +1,30 @@
 """
 Analytical queries for SERP data: percentiles, deltas, aggregations.
-Runs against a Trino server via the trino Python client (DB-API 2.0).
+Runs against Trino via the Hopsworks Trino API (DB-API 2.0 cursor).
 """
 
 import time
 from typing import Any, Dict, Optional
 
-import trino
-
 
 class SERPQueries:
-    """Analytical queries for SERP data accessed through Trino."""
+    """Analytical queries for SERP data accessed through Hopsworks Trino API."""
 
-    def __init__(self, host: str, port: int, catalog: str, schema: str):
-        self.conn = trino.dbapi.connect(
-            host=host,
-            port=port,
-            catalog=catalog,
-            schema=schema,
-            user="trino",
-        )
-        self.table = "serp_data"
+    def __init__(self, conn, table="serp_data"):
+        self.conn = conn
+        self.table = table
 
     def setup_table(self, parquet_path: str):
-        """Create an external Hive table over the Parquet data directory."""
+        """Create a Delta table from the local Parquet file."""
+        cursor = self.conn.cursor()
+        # Drop if exists so we get a clean load
+        cursor.execute(f"DROP TABLE IF EXISTS {self.table}")
+        cursor.fetchall()
+        cursor.close()
+
         cursor = self.conn.cursor()
         cursor.execute(f"""
-            CREATE TABLE IF NOT EXISTS {self.table} (
+            CREATE TABLE {self.table} (
                 id BIGINT,
                 query VARCHAR,
                 timestamp TIMESTAMP,
@@ -39,13 +37,22 @@ class SERPQueries:
                 previous_rank INTEGER,
                 rank_delta INTEGER
             )
-            WITH (
-                external_location = '{parquet_path}',
-                format = 'PARQUET'
-            )
         """)
         cursor.fetchall()
         cursor.close()
+
+        # Load data from the Parquet file using Hive catalog as a source
+        cursor = self.conn.cursor()
+        cursor.execute(f"""
+            INSERT INTO {self.table}
+            SELECT
+                id, query, timestamp, result_position, title, url,
+                snippet, domain, rank, previous_rank, rank_delta
+            FROM hive.jim_featurestore.serp_data_source
+        """)
+        cursor.fetchall()
+        cursor.close()
+        print(f"Table {self.table} created and loaded.")
 
     def row_count(self) -> int:
         cursor = self.conn.cursor()

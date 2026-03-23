@@ -9,8 +9,8 @@ Charts:
   4. Aggregation Query — GROUP BY latency
 
 Usage:
-    python polars/create_dashboard.py
-    python polars/create_dashboard.py --results data/polars_benchmark_results_<ts>.json
+    python polars_db/create_dashboard.py
+    python polars_db/create_dashboard.py --results data/polars_benchmark_results_<ts>.json
 """
 
 import argparse
@@ -195,7 +195,7 @@ def main():
             if f.startswith("polars_benchmark_results_") and f.endswith(".json")
         )
         if not result_files:
-            print("No Polars benchmark results found in data/. Run polars/benchmark.py first.")
+            print("No Polars benchmark results found in data/. Run polars_db/benchmark.py first.")
             sys.exit(1)
         results_path = os.path.join(data_dir, result_files[-1])
         print(f"Using latest results: {results_path}")

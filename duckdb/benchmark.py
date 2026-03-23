@@ -31,13 +31,7 @@ def run_benchmark(data_path: str, test_counts: list = None):
         total_rows = queries.row_count()
         print(f"Data source: {data_path} ({total_rows:,} rows)")
 
-        # Pre-compute sorted IDs for efficient max_id lookup
-        print("Computing ID index...")
-        sorted_ids = queries.conn.execute(
-            "SELECT id FROM serp_data ORDER BY id"
-        ).fetchall()
-        sorted_ids = [row[0] for row in sorted_ids]
-        print(f"ID index ready ({len(sorted_ids):,} entries)")
+        # IDs are sequential 1..N, so max_id == target_count (no need to load all IDs)
 
         results = []
 
@@ -50,7 +44,7 @@ def run_benchmark(data_path: str, test_counts: list = None):
             print(f"Benchmarking at {target_count:,} records")
             print(f"{'=' * 60}")
 
-            max_id = sorted_ids[target_count - 1]
+            max_id = target_count
 
             try:
                 process = psutil.Process()

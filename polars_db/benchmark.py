@@ -28,25 +28,27 @@ def run_benchmark(data_path: str, test_counts: list = None):
             25000000, 30000000, 40000000, 50000000, 100000000,
         ]
 
-    # Read full dataset once
-    # Use PyArrow as intermediary to avoid mmap issues on FUSE filesystems (e.g. HopsFS)
-    print(f"Loading data from {data_path}...")
+    # Read only the rows we need (up to max test_counts) to avoid OOM on large files
+    max_needed = max(test_counts)
+    print(f"Loading up to {max_needed:,} rows from {data_path}...")
     load_start = time.time()
     resolved = os.path.realpath(data_path)
     if resolved.startswith("/hopsfs"):
         import pyarrow.parquet as pq
         print("  (using PyArrow reader for HopsFS FUSE compatibility)")
         arrow_table = pq.read_table(data_path)
+        # Limit rows after reading — IDs are sequential 1..N
+        if arrow_table.num_rows > max_needed:
+            arrow_table = arrow_table.slice(0, max_needed)
         full_df = pl.from_arrow(arrow_table)
         del arrow_table
     else:
-        full_df = pl.read_parquet(data_path)
+        full_df = pl.read_parquet(data_path, n_rows=max_needed)
     load_time = time.time() - load_start
     total_rows = len(full_df)
     print(f"Loaded {total_rows:,} rows in {load_time:.2f}s")
 
-    # Pre-sort IDs for efficient slicing
-    sorted_ids = full_df["id"].sort()
+    # IDs are sequential 1..N, so max_id == target_count
 
     results = []
 
@@ -59,8 +61,7 @@ def run_benchmark(data_path: str, test_counts: list = None):
         print(f"Benchmarking at {target_count:,} records")
         print(f"{'=' * 60}")
 
-        # Find the max_id for this slice
-        max_id = sorted_ids[target_count - 1]
+        max_id = target_count
 
         try:
             process = psutil.Process()

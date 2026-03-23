@@ -9,8 +9,8 @@ Charts:
   4. Aggregation Query
 
 Usage:
-    python trino/create_dashboard.py
-    python trino/create_dashboard.py --results data/trino_benchmark_results_<ts>.json
+    python trino_db/create_dashboard.py
+    python trino_db/create_dashboard.py --results data/trino_benchmark_results_<ts>.json
 """
 
 import argparse
@@ -192,7 +192,7 @@ def main():
             if f.startswith("trino_benchmark_results_") and f.endswith(".json")
         )
         if not result_files:
-            print("No Trino benchmark results found in data/. Run trino/benchmark.py first.")
+            print("No Trino benchmark results found in data/. Run trino_db/benchmark.py first.")
             sys.exit(1)
         results_path = os.path.join(data_dir, result_files[-1])
         print(f"Using latest results: {results_path}")
