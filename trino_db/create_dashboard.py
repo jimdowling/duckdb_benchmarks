@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 """
-Create a Hopsworks dashboard with Trino benchmark result charts.
+Create a Hopsworks dashboard with Trino benchmark charts AND a 3-framework
+comparison dashboard (DuckDB vs Polars vs Trino).
 
-Charts:
-  1. All Queries — combined line chart with Percentile, Window Function, Aggregation
+Charts for the Trino dashboard:
+  1. All Queries — combined line chart
   2. Percentile Query
   3. Window Function Query
   4. Aggregation Query
+
+Charts for the comparison dashboard:
+  1. Percentile Query — DuckDB vs Polars vs Trino
+  2. Window Function Query — DuckDB vs Polars vs Trino
+  3. Aggregation Query — DuckDB vs Polars vs Trino
+  4. All Queries — DuckDB vs Polars vs Trino
 
 Usage:
     python trino_db/create_dashboard.py
@@ -26,6 +33,9 @@ COLORS = {
     "percentile": "#00d4aa",
     "window": "#ff6b6b",
     "aggregation": "#ffd93d",
+    "duckdb": "#4ecdc4",
+    "polars": "#ff6b6b",
+    "trino": "#a29bfe",
 }
 
 PLOTLY_TEMPLATE = """<!DOCTYPE html>
@@ -34,8 +44,10 @@ PLOTLY_TEMPLATE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <style>
-  body {{ margin: 0; padding: 0; background: #1a1a2e; }}
-  #chart {{ width: 100vw; height: 100vh; }}
+  body {{ margin: 0; padding: 0; background: #1a1a2e; overflow: visible; }}
+  #chart {{ width: 100vw; height: 100vh; overflow: visible; }}
+  .main-svg, .main-svg .draglayer, .main-svg .layer-above {{ overflow: visible !important; }}
+  svg {{ overflow: visible !important; }}
 </style>
 </head>
 <body>
@@ -80,16 +92,15 @@ def _make_layout(title: str, show_legend: bool = False) -> dict:
         "font": {"color": "#c0c0c0"},
         "xaxis": {"gridcolor": "#2a2a4a", "title": {"text": "Record Count"}},
         "yaxis": {"gridcolor": "#2a2a4a", "title": {"text": "Query Time (seconds)"}},
-        "margin": {"t": 80, "b": 80, "l": 70, "r": 30},
-    }
-    if show_legend:
-        layout["showlegend"] = True
-        layout["legend"] = {
+        "showlegend": show_legend,
+        "legend": {
             "orientation": "v",
-            "x": 0.01, "y": 0.99, "xanchor": "left", "yanchor": "top",
+            "x": 1.02, "y": 1, "xanchor": "left", "yanchor": "top",
             "bgcolor": "rgba(22,33,62,0.9)", "bordercolor": "#2a2a4a",
             "borderwidth": 1, "font": {"size": 13, "color": "#e0e0e0"},
-        }
+        },
+        "margin": {"t": 80, "b": 80, "l": 70, "r": 200 if show_legend else 30},
+    }
     return layout
 
 
@@ -113,7 +124,45 @@ def run_hops(cmd: str) -> str:
     return result.stdout.strip()
 
 
-def create_dashboard(series: dict, dashboard_name: str):
+def parse_id(output: str) -> int:
+    for word in output.split():
+        if word.rstrip(")").isdigit():
+            return int(word.rstrip(")"))
+    raise ValueError(f"Could not parse ID from: {output}")
+
+
+def find_latest_results(prefix: str) -> str:
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
+    # Check for a _latest.json first
+    latest = os.path.join(data_dir, f"{prefix}_latest.json")
+    if os.path.exists(latest):
+        return latest
+    # Otherwise find the most recent timestamped file
+    result_files = sorted(
+        f for f in os.listdir(data_dir)
+        if f.startswith(prefix) and f.endswith(".json")
+    )
+    if not result_files:
+        return None
+    return os.path.join(data_dir, result_files[-1])
+
+
+def delete_dashboard(dashboard_id: int):
+    """Delete a dashboard and its charts."""
+    info = run_hops(f"hops dashboard info {dashboard_id}")
+    # Parse chart IDs from the dashboard info
+    for line in info.splitlines():
+        parts = line.split()
+        if parts and parts[0].isdigit():
+            chart_id = int(parts[0])
+            run_hops(f"hops chart delete {chart_id}")
+            print(f"Deleted chart {chart_id}")
+    run_hops(f"hops dashboard delete {dashboard_id}")
+    print(f"Deleted dashboard {dashboard_id}")
+
+
+def create_trino_dashboard(series: dict, dashboard_name: str):
+    """Create a Trino-only benchmark dashboard with 4 charts."""
     os.makedirs(CHART_DIR, exist_ok=True)
 
     # Combined chart
@@ -142,67 +191,162 @@ def create_dashboard(series: dict, dashboard_name: str):
 
     chart_defs = [
         ("Trino \u2014 All Queries", "Resources/charts/trino_all_queries.html",
-         "Combined: Percentile, Window Function, Aggregation (Trino, 1K\u2013100M rows)"),
+         "Combined: Percentile, Window Function, Aggregation (Trino)"),
         ("Trino \u2014 Percentile Query", "Resources/charts/trino_percentile_query.html",
-         "Trino approx_percentile query latency (1K\u2013100M rows)"),
+         "Trino approx_percentile query latency"),
         ("Trino \u2014 Window Function Query", "Resources/charts/trino_window_query.html",
-         "Trino LAG window function latency (1K\u2013100M rows)"),
+         "Trino LAG window function latency"),
         ("Trino \u2014 Aggregation Query", "Resources/charts/trino_aggregation_query.html",
-         "Trino groupBy aggregation latency (1K\u2013100M rows)"),
+         "Trino groupBy aggregation latency"),
     ]
 
     chart_ids = []
     for title, url, desc in chart_defs:
         output = run_hops(f'hops chart create "{title}" --url "{url}" --description "{desc}"')
         print(output)
-        for word in output.split():
-            if word.rstrip(")").isdigit():
-                chart_ids.append(int(word.rstrip(")")))
-                break
+        chart_ids.append(parse_id(output))
 
     output = run_hops(f'hops dashboard create "{dashboard_name}"')
     print(output)
-    dashboard_id = None
-    for word in output.split():
-        if word.rstrip(")").isdigit():
-            dashboard_id = int(word.rstrip(")"))
-    if dashboard_id is None:
-        print("Failed to parse dashboard ID")
-        sys.exit(1)
+    dashboard_id = parse_id(output)
 
     for i, cid in enumerate(chart_ids):
-        run_hops(f"hops dashboard add-chart {dashboard_id} --chart-id {cid} --width 12 --height 10 --x 0 --y {i * 10}")
+        run_hops(f"hops dashboard add-chart {dashboard_id} --chart-id {cid} --width 24 --height 10 --x 0 --y {i * 10}")
 
     print(f"\nDashboard '{dashboard_name}' (ID: {dashboard_id}) \u2014 {len(chart_ids)} charts")
     print(run_hops(f"hops dashboard info {dashboard_id}"))
+    return dashboard_id
+
+
+def create_comparison_dashboard(trino: dict, duckdb: dict, polars: dict):
+    """Create a 3-framework comparison dashboard replacing the old one."""
+    os.makedirs(CHART_DIR, exist_ok=True)
+
+    # Use DuckDB x-labels as reference (they should all match)
+    x = duckdb["x"]
+
+    # Per-query comparison charts
+    for key, label in [
+        ("percentile", "Percentile Query"),
+        ("window", "Window Function Query"),
+        ("aggregation", "Aggregation Query"),
+    ]:
+        write_chart(f"comparison_{key}.html", [
+            {"type": "scatter", "mode": "lines+markers", "name": "DuckDB",
+             "x": x, "y": duckdb[key],
+             "line": {"color": COLORS["duckdb"], "width": 3}, "marker": {"size": 6}},
+            {"type": "scatter", "mode": "lines+markers", "name": "Polars",
+             "x": x, "y": polars[key],
+             "line": {"color": COLORS["polars"], "width": 3}, "marker": {"size": 6}},
+            {"type": "scatter", "mode": "lines+markers", "name": "Trino",
+             "x": x, "y": trino[key],
+             "line": {"color": COLORS["trino"], "width": 3}, "marker": {"size": 6}},
+        ], f"{label} \u2014 DuckDB vs Polars vs Trino", show_legend=True)
+
+    # Combined "all queries" comparison — show total time per framework
+    duckdb_total = [round(p + w + a, 4) for p, w, a in zip(duckdb["percentile"], duckdb["window"], duckdb["aggregation"])]
+    polars_total = [round(p + w + a, 4) for p, w, a in zip(polars["percentile"], polars["window"], polars["aggregation"])]
+    trino_total = [round(p + w + a, 4) for p, w, a in zip(trino["percentile"], trino["window"], trino["aggregation"])]
+
+    write_chart("comparison_total.html", [
+        {"type": "scatter", "mode": "lines+markers", "name": "DuckDB",
+         "x": x, "y": duckdb_total,
+         "line": {"color": COLORS["duckdb"], "width": 3}, "marker": {"size": 6}},
+        {"type": "scatter", "mode": "lines+markers", "name": "Polars",
+         "x": x, "y": polars_total,
+         "line": {"color": COLORS["polars"], "width": 3}, "marker": {"size": 6}},
+        {"type": "scatter", "mode": "lines+markers", "name": "Trino",
+         "x": x, "y": trino_total,
+         "line": {"color": COLORS["trino"], "width": 3}, "marker": {"size": 6}},
+    ], "Total Query Time \u2014 DuckDB vs Polars vs Trino", show_legend=True)
+
+    chart_defs = [
+        ("Percentile Query \u2014 DuckDB vs Polars vs Trino",
+         "Resources/charts/comparison_percentile.html",
+         "Percentile query latency comparison across all 3 frameworks"),
+        ("Window Function Query \u2014 DuckDB vs Polars vs Trino",
+         "Resources/charts/comparison_window.html",
+         "Window function query latency comparison across all 3 frameworks"),
+        ("Aggregation Query \u2014 DuckDB vs Polars vs Trino",
+         "Resources/charts/comparison_aggregation.html",
+         "Aggregation query latency comparison across all 3 frameworks"),
+        ("Total Query Time \u2014 DuckDB vs Polars vs Trino",
+         "Resources/charts/comparison_total.html",
+         "Sum of all 3 queries — total latency comparison"),
+    ]
+
+    chart_ids = []
+    for title, url, desc in chart_defs:
+        output = run_hops(f'hops chart create "{title}" --url "{url}" --description "{desc}"')
+        print(output)
+        chart_ids.append(parse_id(output))
+
+    dashboard_name = "DuckDB vs Polars vs Trino Comparison"
+    output = run_hops(f'hops dashboard create "{dashboard_name}"')
+    print(output)
+    dashboard_id = parse_id(output)
+
+    for i, cid in enumerate(chart_ids):
+        run_hops(f"hops dashboard add-chart {dashboard_id} --chart-id {cid} --width 24 --height 10 --x 0 --y {i * 10}")
+
+    print(f"\nDashboard '{dashboard_name}' (ID: {dashboard_id}) \u2014 {len(chart_ids)} charts")
+    print(run_hops(f"hops dashboard info {dashboard_id}"))
+    return dashboard_id
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Create Hopsworks dashboard from Trino benchmark results")
-    parser.add_argument("--results", type=str, default=None, help="Path to results JSON")
-    parser.add_argument("--dashboard-name", type=str, default="Trino Benchmark Results")
+    parser = argparse.ArgumentParser(description="Create Trino + comparison dashboards from benchmark results")
+    parser.add_argument("--results", type=str, default=None, help="Path to Trino results JSON")
+    parser.add_argument("--duckdb-results", type=str, default=None, help="Path to DuckDB results JSON")
+    parser.add_argument("--polars-results", type=str, default=None, help="Path to Polars results JSON")
+    parser.add_argument("--skip-trino-dashboard", action="store_true", help="Skip creating Trino-only dashboard")
+    parser.add_argument("--skip-comparison", action="store_true", help="Skip creating comparison dashboard")
+    parser.add_argument("--delete-old-comparison", type=int, default=None,
+                        help="Dashboard ID of old comparison dashboard to delete")
     args = parser.parse_args()
 
+    # Find Trino results
     if args.results:
-        results_path = args.results
+        trino_path = args.results
     else:
-        data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
-        result_files = sorted(
-            f for f in os.listdir(data_dir)
-            if f.startswith("trino_benchmark_results_") and f.endswith(".json")
-        )
-        if not result_files:
-            print("No Trino benchmark results found in data/. Run trino_db/benchmark.py first.")
-            sys.exit(1)
-        results_path = os.path.join(data_dir, result_files[-1])
-        print(f"Using latest results: {results_path}")
+        trino_path = find_latest_results("trino_benchmark_results_")
+        if trino_path:
+            print(f"Using latest Trino results: {trino_path}")
 
-    series = load_benchmark_results(results_path)
-    if not series["x"]:
-        print("No successful benchmark results found.")
+    if not trino_path or not os.path.exists(trino_path):
+        print("No Trino benchmark results found. Run trino_db/benchmark.py first.")
         sys.exit(1)
 
-    create_dashboard(series, args.dashboard_name)
+    trino_series = load_benchmark_results(trino_path)
+    if not trino_series["x"]:
+        print("No successful Trino benchmark results found.")
+        sys.exit(1)
+
+    # Create Trino-only dashboard
+    if not args.skip_trino_dashboard:
+        create_trino_dashboard(trino_series, "Trino Benchmark Results")
+
+    # Create comparison dashboard
+    if not args.skip_comparison:
+        duckdb_path = args.duckdb_results or find_latest_results("benchmark_results_duckdb")
+        polars_path = args.polars_results or find_latest_results("polars_benchmark_results_")
+
+        if not duckdb_path or not os.path.exists(duckdb_path):
+            print("No DuckDB results found. Skipping comparison dashboard.")
+        elif not polars_path or not os.path.exists(polars_path):
+            print("No Polars results found. Skipping comparison dashboard.")
+        else:
+            duckdb_series = load_benchmark_results(duckdb_path)
+            polars_series = load_benchmark_results(polars_path)
+
+            # Delete old comparison dashboard if requested
+            if args.delete_old_comparison:
+                print(f"\nDeleting old comparison dashboard (ID: {args.delete_old_comparison})...")
+                delete_dashboard(args.delete_old_comparison)
+
+            print("\nCreating 3-framework comparison dashboard...")
+            create_comparison_dashboard(trino_series, duckdb_series, polars_series)
+
     print("\nDone!")
 
 

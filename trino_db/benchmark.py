@@ -1,12 +1,11 @@
 """
 Performance benchmark script: tests Trino at different record counts.
-Connects via the Hopsworks Trino API using the 'delta' catalog
-and 'jim_featurestore' schema.
+Connects via the Hopsworks Trino API and reads from the serp_data
+feature group's Delta table directly.
 
 Usage (from project root):
     python trino_db/benchmark.py
     python trino_db/benchmark.py --counts 1000000 10000000 50000000
-    python trino_db/benchmark.py --skip-setup
 """
 
 import argparse
@@ -18,44 +17,40 @@ import traceback
 from datetime import datetime
 
 import hopsworks
+from hopsworks_common import client
+from hopsworks_common.core import project_api, secret_api
+from hopsworks_common.core.variable_api import VariableApi
+from trino.auth import BasicAuthentication
+from trino.dbapi import connect as trino_connect
 from queries import SERPQueries
 
-# Connect via Hopsworks Trino API
+# Connect to Hopsworks and resolve Trino credentials
 project = hopsworks.login()
-trino_api = project.get_trino_api()
-conn = trino_api.connect(catalog="delta", schema="jim_featurestore")
+fs = project.get_feature_store()
+featurestore_name = fs.name
 
+variable_api = VariableApi()
+service_discovery_domain = variable_api.get_service_discovery_domain()
+host = f"coordinator.trino.service.{service_discovery_domain}"
 
-def setup_source_table(parquet_path: str):
-    """Create an external Hive table pointing at the Parquet file so Delta can read from it."""
-    cursor = conn.cursor()
-    cursor.execute("DROP TABLE IF EXISTS hive.jim_featurestore.serp_data_source")
-    cursor.fetchall()
-    cursor.close()
+_project_api = project_api.ProjectApi()
+username = _project_api.get_user_info()["username"]
+user = f"{project.name}__{username}"
 
-    cursor = conn.cursor()
-    cursor.execute(f"""
-        CREATE TABLE hive.jim_featurestore.serp_data_source (
-            id BIGINT,
-            query VARCHAR,
-            timestamp TIMESTAMP,
-            result_position INTEGER,
-            title VARCHAR,
-            url VARCHAR,
-            snippet VARCHAR,
-            domain VARCHAR,
-            rank INTEGER,
-            previous_rank INTEGER,
-            rank_delta INTEGER
-        )
-        WITH (
-            external_location = '{parquet_path}',
-            format = 'PARQUET'
-        )
-    """)
-    cursor.fetchall()
-    cursor.close()
-    print(f"Hive source table created over {parquet_path}")
+_secret_api = secret_api.SecretsApi()
+password = _secret_api.get_secret(user).value
+ca_chain_path = client.get_instance()._get_ca_chain_path()
+
+conn = trino_connect(
+    host=host,
+    port=8443,
+    user=user,
+    catalog="delta",
+    schema=featurestore_name,
+    auth=BasicAuthentication(user, password),
+    http_scheme="https",
+    verify=ca_chain_path,
+)
 
 
 def run_benchmark(queries, test_counts=None):
@@ -148,10 +143,8 @@ def save_results(results, output_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark Trino performance at different scales")
-    parser.add_argument("--data", type=str,
-                        default="hdfs:///Projects/jim/Users/meb10000/duckdb_benchmarks/data/serp_parquet/",
-                        help="External location for the Parquet source (HDFS directory)")
-    parser.add_argument("--skip-setup", action="store_true", help="Skip table creation (table already exists)")
+    parser.add_argument("--table", type=str, default="serp_data_1",
+                        help="Feature group table name in the featurestore (default: serp_data_1)")
     parser.add_argument("--counts", nargs="+", type=int, help="Record counts to test")
     parser.add_argument("--output", type=str, default=None, help="Output JSON file")
 
@@ -161,16 +154,8 @@ if __name__ == "__main__":
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         args.output = f"data/trino_benchmark_results_{timestamp}.json"
 
-    print("Connecting to Trino via Hopsworks (catalog=delta, schema=jim_featurestore)")
-
-    queries = SERPQueries(conn, table="serp_data")
-
-    if not args.skip_setup:
-        print(f"Setting up source table over {args.data}...")
-        setup_source_table(args.data)
-        print("Loading data into Delta table...")
-        queries.setup_table(args.data)
-        print("Table ready.")
+    print(f"Connecting to Trino via Hopsworks (catalog=delta, schema={featurestore_name})")
+    queries = SERPQueries(conn, table=args.table)
 
     test_counts = args.counts if args.counts else None
     results = run_benchmark(queries, test_counts)

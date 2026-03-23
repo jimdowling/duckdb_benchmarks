@@ -1,6 +1,7 @@
 """
 Analytical queries for SERP data: percentiles, deltas, aggregations.
 Runs against Trino via the Hopsworks Trino API (DB-API 2.0 cursor).
+Reads from the serp_data feature group's Delta table.
 """
 
 import time
@@ -10,49 +11,9 @@ from typing import Any, Dict, Optional
 class SERPQueries:
     """Analytical queries for SERP data accessed through Hopsworks Trino API."""
 
-    def __init__(self, conn, table="serp_data"):
+    def __init__(self, conn, table="serp_data_1"):
         self.conn = conn
         self.table = table
-
-    def setup_table(self, parquet_path: str):
-        """Create a Delta table from the local Parquet file."""
-        cursor = self.conn.cursor()
-        # Drop if exists so we get a clean load
-        cursor.execute(f"DROP TABLE IF EXISTS {self.table}")
-        cursor.fetchall()
-        cursor.close()
-
-        cursor = self.conn.cursor()
-        cursor.execute(f"""
-            CREATE TABLE {self.table} (
-                id BIGINT,
-                query VARCHAR,
-                timestamp TIMESTAMP,
-                result_position INTEGER,
-                title VARCHAR,
-                url VARCHAR,
-                snippet VARCHAR,
-                domain VARCHAR,
-                rank INTEGER,
-                previous_rank INTEGER,
-                rank_delta INTEGER
-            )
-        """)
-        cursor.fetchall()
-        cursor.close()
-
-        # Load data from the Parquet file using Hive catalog as a source
-        cursor = self.conn.cursor()
-        cursor.execute(f"""
-            INSERT INTO {self.table}
-            SELECT
-                id, query, timestamp, result_position, title, url,
-                snippet, domain, rank, previous_rank, rank_delta
-            FROM hive.jim_featurestore.serp_data_source
-        """)
-        cursor.fetchall()
-        cursor.close()
-        print(f"Table {self.table} created and loaded.")
 
     def row_count(self) -> int:
         cursor = self.conn.cursor()
