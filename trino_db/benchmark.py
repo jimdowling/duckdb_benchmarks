@@ -84,6 +84,7 @@ def run_benchmark(queries, test_counts=None):
         try:
             metrics = queries.query_performance_metrics(max_id=max_id)
 
+            any_failed = any(metrics[k].get("error") for k in ("percentile", "delta", "aggregation"))
             result = {
                 "record_count": target_count,
                 "percentile_seconds": metrics["percentile"]["elapsed_seconds"],
@@ -93,14 +94,15 @@ def run_benchmark(queries, test_counts=None):
                 "memory_after_mb": 0.0,
                 "disk_read_mb": 0.0,
                 "disk_write_mb": 0.0,
-                "status": "success",
+                "status": "partial" if any_failed else "success",
             }
             results.append(result)
 
-            print(f"\n[OK] Results at {target_count:,} records:")
-            print(f"  Percentile query: {metrics['percentile']['elapsed_seconds']:.3f}s")
-            print(f"  Delta query: {metrics['delta']['elapsed_seconds']:.3f}s")
-            print(f"  Aggregation query: {metrics['aggregation']['elapsed_seconds']:.3f}s")
+            tag = "[PARTIAL]" if any_failed else "[OK]"
+            print(f"\n{tag} Results at {target_count:,} records:")
+            for qname, key in [("Percentile", "percentile"), ("Delta", "delta"), ("Aggregation", "aggregation")]:
+                t = metrics[key]["elapsed_seconds"]
+                print(f"  {qname} query: {f'{t:.3f}s' if t is not None else 'FAILED'}")
 
         except Exception as e:
             print(f"\n[ERROR] at {target_count:,} records: {e}")

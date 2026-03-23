@@ -1,6 +1,6 @@
 """
 Analytical queries for SERP data: percentiles, deltas, aggregations.
-Reads from Parquet via DuckDB.
+Reads from the serp_data feature group's Delta table via DuckDB.
 """
 
 import duckdb
@@ -10,19 +10,22 @@ import psutil
 
 
 class SERPQueries:
-    """Analytical queries for SERP data stored in Parquet."""
+    """Analytical queries for SERP data stored as a Delta table on HopsFS."""
 
-    def __init__(self, parquet_path: str):
+    def __init__(self, delta_path: str):
         self.conn = duckdb.connect()
 
         # Set memory limit to 80% of available RAM
         mem_gb = int(psutil.virtual_memory().available / (1024**3) * 0.8)
         self.conn.execute(f"SET memory_limit='{mem_gb}GB'")
 
-        # Create a view over the Parquet file
+        # Load the Delta extension for reading Delta Lake tables
+        self.conn.execute("INSTALL delta; LOAD delta;")
+
+        # Create a view over the Delta table on HopsFS
         self.conn.execute(f"""
             CREATE VIEW serp_data AS
-            SELECT * FROM read_parquet('{parquet_path}')
+            SELECT * FROM delta_scan('{delta_path}')
         """)
 
     def row_count(self) -> int:

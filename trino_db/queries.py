@@ -122,24 +122,26 @@ class SERPQueries:
         }
 
     def query_performance_metrics(self, max_id: Optional[int] = None) -> Dict[str, Any]:
-        percentile_result = self.percentile_rank_by_domain(max_id=max_id)
-        delta_result = self.rank_deltas(max_id=max_id)
-        agg_result = self.top_domains_by_aggregation(max_id=max_id)
-
-        return {
-            "percentile": {
-                "elapsed_seconds": percentile_result["elapsed_seconds"],
-                "rows_returned": percentile_result["rows_returned"],
-            },
-            "delta": {
-                "elapsed_seconds": delta_result["elapsed_seconds"],
-                "rows_returned": delta_result["rows_returned"],
-            },
-            "aggregation": {
-                "elapsed_seconds": agg_result["elapsed_seconds"],
-                "rows_returned": agg_result["rows_returned"],
-            },
-        }
+        results = {}
+        for name, fn in [
+            ("percentile", self.percentile_rank_by_domain),
+            ("delta", self.rank_deltas),
+            ("aggregation", self.top_domains_by_aggregation),
+        ]:
+            try:
+                r = fn(max_id=max_id)
+                results[name] = {
+                    "elapsed_seconds": r["elapsed_seconds"],
+                    "rows_returned": r["rows_returned"],
+                }
+            except Exception as e:
+                print(f"  [WARN] {name} query failed: {e}")
+                results[name] = {
+                    "elapsed_seconds": None,
+                    "rows_returned": 0,
+                    "error": str(e),
+                }
+        return results
 
     def close(self):
         self.conn.close()

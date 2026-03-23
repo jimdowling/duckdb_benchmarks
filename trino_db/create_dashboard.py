@@ -69,28 +69,33 @@ def load_benchmark_results(results_path: str) -> dict:
     with open(results_path) as f:
         data = json.load(f)
 
-    x_labels, percentile, window, aggregation = [], [], [], []
+    x_values, x_labels, percentile, window, aggregation = [], [], [], [], []
 
     for r in data["results"]:
-        if r.get("status") != "success":
+        if r.get("status") not in ("success", "partial"):
             continue
         rc = r["record_count"]
         label = f"{rc / 1e6:.0f}M" if rc >= 1e6 else f"{rc / 1e3:.0f}K"
+        x_values.append(rc)
         x_labels.append(label)
-        percentile.append(round(r["percentile_seconds"], 4))
-        window.append(round(r["delta_seconds"], 4))
-        aggregation.append(round(r["aggregation_seconds"], 4))
+        percentile.append(round(r["percentile_seconds"], 4) if r["percentile_seconds"] is not None else None)
+        window.append(round(r["delta_seconds"], 4) if r["delta_seconds"] is not None else None)
+        aggregation.append(round(r["aggregation_seconds"], 4) if r["aggregation_seconds"] is not None else None)
 
     print(f"Loaded {len(x_labels)} data points from {results_path}")
-    return {"x": x_labels, "percentile": percentile, "window": window, "aggregation": aggregation}
+    return {"x": x_labels, "x_numeric": x_values, "percentile": percentile, "window": window, "aggregation": aggregation}
 
 
-def _make_layout(title: str, show_legend: bool = False) -> dict:
+def _make_layout(title: str, show_legend: bool = False, numeric_xaxis: bool = False) -> dict:
+    xaxis = {"gridcolor": "#2a2a4a", "title": {"text": "Record Count"}}
+    if numeric_xaxis:
+        xaxis["type"] = "linear"
+        xaxis["tickmode"] = "array"
     layout = {
         "title": {"text": title, "font": {"color": "#e0e0e0", "size": 18}},
         "paper_bgcolor": "#1a1a2e", "plot_bgcolor": "#16213e",
         "font": {"color": "#c0c0c0"},
-        "xaxis": {"gridcolor": "#2a2a4a", "title": {"text": "Record Count"}},
+        "xaxis": xaxis,
         "yaxis": {"gridcolor": "#2a2a4a", "title": {"text": "Query Time (seconds)"}},
         "showlegend": show_legend,
         "legend": {
@@ -104,11 +109,16 @@ def _make_layout(title: str, show_legend: bool = False) -> dict:
     return layout
 
 
-def write_chart(filename: str, traces: list, title: str, show_legend: bool = False) -> str:
+def write_chart(filename: str, traces: list, title: str, show_legend: bool = False, numeric_xaxis: bool = False) -> str:
     path = os.path.join(CHART_DIR, filename)
+    layout = _make_layout(title, show_legend, numeric_xaxis=numeric_xaxis)
+    if numeric_xaxis:
+        all_x = sorted(set(v for t in traces for v in t.get("x", [])))
+        layout["xaxis"]["tickvals"] = all_x
+        layout["xaxis"]["ticktext"] = [f"{v / 1e6:.0f}M" if v >= 1e6 else f"{v / 1e3:.0f}K" for v in all_x]
     html = PLOTLY_TEMPLATE.format(
         traces=json.dumps(traces),
-        layout=json.dumps(_make_layout(title, show_legend)),
+        layout=json.dumps(layout),
     )
     with open(path, "w") as f:
         f.write(html)
@@ -222,9 +232,7 @@ def create_comparison_dashboard(trino: dict, duckdb: dict, polars: dict):
     """Create a 3-framework comparison dashboard replacing the old one."""
     os.makedirs(CHART_DIR, exist_ok=True)
 
-    # Use DuckDB x-labels as reference (they should all match)
-    x = duckdb["x"]
-
+    # Use numeric x-values so different data points sort correctly on the axis
     # Per-query comparison charts
     for key, label in [
         ("percentile", "Percentile Query"),
@@ -233,30 +241,34 @@ def create_comparison_dashboard(trino: dict, duckdb: dict, polars: dict):
     ]:
         write_chart(f"comparison_{key}.html", [
             {"type": "scatter", "mode": "lines+markers", "name": "DuckDB",
-             "x": x, "y": duckdb[key],
+             "x": duckdb["x_numeric"], "y": duckdb[key],
              "line": {"color": COLORS["duckdb"], "width": 3}, "marker": {"size": 6}},
             {"type": "scatter", "mode": "lines+markers", "name": "Polars",
-             "x": x, "y": polars[key],
+             "x": polars["x_numeric"], "y": polars[key],
              "line": {"color": COLORS["polars"], "width": 3}, "marker": {"size": 6}},
             {"type": "scatter", "mode": "lines+markers", "name": "Trino",
-             "x": x, "y": trino[key],
+             "x": trino["x_numeric"], "y": trino[key],
              "line": {"color": COLORS["trino"], "width": 3}, "marker": {"size": 6}},
-        ], f"{label} \u2014 DuckDB vs Polars vs Trino", show_legend=True)
+        ], f"{label} \u2014 DuckDB vs Polars vs Trino", show_legend=True, numeric_xaxis=True)
 
     # Combined "all queries" comparison — show total time per framework
-    duckdb_total = [round(p + w + a, 4) for p, w, a in zip(duckdb["percentile"], duckdb["window"], duckdb["aggregation"])]
-    polars_total = [round(p + w + a, 4) for p, w, a in zip(polars["percentile"], polars["window"], polars["aggregation"])]
-    trino_total = [round(p + w + a, 4) for p, w, a in zip(trino["percentile"], trino["window"], trino["aggregation"])]
+    def _safe_total(p, w, a):
+        vals = [v for v in (p, w, a) if v is not None]
+        return round(sum(vals), 4) if vals else None
+
+    duckdb_total = [_safe_total(p, w, a) for p, w, a in zip(duckdb["percentile"], duckdb["window"], duckdb["aggregation"])]
+    polars_total = [_safe_total(p, w, a) for p, w, a in zip(polars["percentile"], polars["window"], polars["aggregation"])]
+    trino_total = [_safe_total(p, w, a) for p, w, a in zip(trino["percentile"], trino["window"], trino["aggregation"])]
 
     write_chart("comparison_total.html", [
         {"type": "scatter", "mode": "lines+markers", "name": "DuckDB",
-         "x": x, "y": duckdb_total,
+         "x": duckdb["x_numeric"], "y": duckdb_total,
          "line": {"color": COLORS["duckdb"], "width": 3}, "marker": {"size": 6}},
         {"type": "scatter", "mode": "lines+markers", "name": "Polars",
-         "x": x, "y": polars_total,
+         "x": polars["x_numeric"], "y": polars_total,
          "line": {"color": COLORS["polars"], "width": 3}, "marker": {"size": 6}},
         {"type": "scatter", "mode": "lines+markers", "name": "Trino",
-         "x": x, "y": trino_total,
+         "x": trino["x_numeric"], "y": trino_total,
          "line": {"color": COLORS["trino"], "width": 3}, "marker": {"size": 6}},
     ], "Total Query Time \u2014 DuckDB vs Polars vs Trino", show_legend=True)
 

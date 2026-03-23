@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Generate synthetic SERP benchmark data as Parquet.
+Generate synthetic SERP benchmark data and write to Hopsworks feature group.
 
-Writes to /tmp for speed, then copies to the project data/ directory.
-All three engines (DuckDB, Polars, PySpark) read from this shared Parquet file.
+Uses DuckDB for fast data generation, then inserts into the 'serp_data'
+offline feature group (Delta table). For very large datasets (100M+ rows),
+consider using pyspark_generate_data.py instead for distributed writes.
 
 Usage:
     python generate_data.py                    # 100M rows (default)
@@ -12,20 +13,49 @@ Usage:
 
 import argparse
 import os
-import shutil
 import time
 
 import duckdb
+import hopsworks
+from hsfs.feature import Feature
+from hsfs import statistics_config as sc
 
 
-def generate_parquet(target_rows: int, output_path: str):
+def create_or_get_feature_group(fs):
+    """Create (or retrieve) the serp_data feature group."""
+    features = [
+        Feature("id", type="bigint", description="Row identifier"),
+        Feature("query", type="string", description="Search query text"),
+        Feature("timestamp", type="timestamp", description="Timestamp of the SERP result"),
+        Feature("result_position", type="int", description="Position in the SERP"),
+        Feature("title", type="string", description="Result title"),
+        Feature("url", type="string", description="Result URL"),
+        Feature("snippet", type="string", description="Result snippet text"),
+        Feature("domain", type="string", description="Domain of the result"),
+        Feature("rank", type="int", description="Current rank"),
+        Feature("previous_rank", type="double", description="Previous rank (nullable)"),
+        Feature("rank_delta", type="double", description="Rank delta (nullable)"),
+    ]
+
+    fg = fs.get_or_create_feature_group(
+        name="serp_data",
+        version=1,
+        description="Synthetic SERP benchmark dataset",
+        primary_key=["id"],
+        event_time="timestamp",
+        features=features,
+        statistics_config=sc.StatisticsConfig(enabled=False),
+    )
+    return fg
+
+
+def generate_to_parquet(target_rows: int, output_path: str):
     """Generate synthetic SERP data using DuckDB and write as Parquet."""
     print(f"Generating {target_rows:,} rows of synthetic SERP data...")
     start = time.time()
 
     conn = duckdb.connect()
 
-    # Use 80% of available RAM
     import psutil
     mem_gb = int(psutil.virtual_memory().available / (1024**3) * 0.8)
     conn.execute(f"SET memory_limit='{mem_gb}GB'")
@@ -89,8 +119,7 @@ def generate_parquet(target_rows: int, output_path: str):
     domain_count = conn.execute("SELECT COUNT(*) FROM domains").fetchone()[0]
     print(f"  Query pool: {query_count:,}, Domain pool: {domain_count:,}")
 
-    # Generate all rows in one shot using DuckDB's generate_series
-    print(f"  Generating rows...")
+    print("  Generating rows...")
     gen_start = time.time()
 
     conn.execute(f"""
@@ -106,10 +135,10 @@ def generate_parquet(target_rows: int, output_path: str):
                 d.domain,
                 ((i * 7 + 13) % 100 + 1)::INTEGER AS rank,
                 CASE WHEN i % 3 = 0
-                     THEN ((i * 11 + 17) % 100 + 1)::INTEGER
+                     THEN ((i * 11 + 17) % 100 + 1)::DOUBLE
                      ELSE NULL
                 END AS previous_rank,
-                NULL::INTEGER AS rank_delta
+                NULL::DOUBLE AS rank_delta
             FROM generate_series(0, {target_rows - 1}) t(i)
             JOIN queries q ON q.rowid = (i % {query_count}) + 1
             JOIN domains d ON d.rowid = (i % {domain_count}) + 1
@@ -117,47 +146,47 @@ def generate_parquet(target_rows: int, output_path: str):
     """)
 
     gen_elapsed = time.time() - gen_start
-    total_elapsed = time.time() - start
-
     file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
-    print(f"  Generation: {gen_elapsed:.1f}s")
-    print(f"  Total: {total_elapsed:.1f}s")
-    print(f"  File size: {file_size_mb:.0f} MB")
-    print(f"  Rate: {target_rows / gen_elapsed:,.0f} rows/sec")
-    print(f"  Wrote: {output_path}")
+    print(f"  Generation: {gen_elapsed:.1f}s ({target_rows / gen_elapsed:,.0f} rows/sec)")
+    print(f"  Parquet size: {file_size_mb:.0f} MB")
 
     conn.close()
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate synthetic SERP benchmark data")
+    parser = argparse.ArgumentParser(description="Generate synthetic SERP data → Hopsworks feature group")
     parser.add_argument("--rows", type=int, default=100_000_000,
                         help="Number of rows to generate (default: 100M)")
-    parser.add_argument("--dest", type=str, default="data/serp_data.parquet",
-                        help="Final destination path (default: data/serp_data.parquet)")
     args = parser.parse_args()
 
+    # Connect to Hopsworks
+    print("Connecting to Hopsworks...")
+    project = hopsworks.login()
+    fs = project.get_feature_store()
+    fg = create_or_get_feature_group(fs)
+
+    # Generate data to temp parquet (DuckDB is very fast at this)
     tmp_path = "/tmp/serp_data.parquet"
+    generate_to_parquet(args.rows, tmp_path)
 
-    # Generate on /tmp
-    generate_parquet(args.rows, tmp_path)
+    # Read parquet as polars (arrow-backed) and insert into feature group
+    import polars as pl
+    print(f"\nReading temp parquet into polars DataFrame...")
+    read_start = time.time()
+    df = pl.read_parquet(tmp_path)
+    print(f"  Read {len(df):,} rows in {time.time() - read_start:.1f}s")
 
-    # Copy to destination
-    dest_dir = os.path.dirname(args.dest)
-    if dest_dir:
-        os.makedirs(dest_dir, exist_ok=True)
+    print(f"Inserting into feature group '{fg.name}' v{fg.version}...")
+    insert_start = time.time()
+    fg.insert(df)
+    insert_elapsed = time.time() - insert_start
+    print(f"  Insert completed in {insert_elapsed:.1f}s")
 
-    print(f"\nCopying {tmp_path} -> {args.dest}...")
-    copy_start = time.time()
-    shutil.copy2(tmp_path, args.dest)
-    copy_elapsed = time.time() - copy_start
-    print(f"  Copied in {copy_elapsed:.1f}s")
-
-    # Clean up
+    # Clean up temp file
     os.remove(tmp_path)
-    print("  Cleaned up /tmp")
+    print("  Cleaned up temp parquet")
 
-    print(f"\nDone! Data ready at: {args.dest}")
+    print("\nDone! Data written to feature group.")
 
 
 if __name__ == "__main__":
