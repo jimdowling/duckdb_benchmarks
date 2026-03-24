@@ -42,8 +42,8 @@ PLOTLY_TEMPLATE = """<!DOCTYPE html>
 <style>
   body {{ margin: 0; padding: 0; background: #1a1a2e; overflow: visible; }}
   #chart {{ width: 100vw; height: 100vh; overflow: visible; }}
-  /* Prevent Plotly SVG from clipping the legend */
-  .main-svg, .main-svg .draglayer, .main-svg .layer-above {{ overflow: visible !important; }}
+  .main-svg {{ overflow: visible !important; }}
+  .main-svg * {{ overflow: visible !important; }}
   svg {{ overflow: visible !important; }}
 </style>
 </head>
@@ -92,12 +92,12 @@ def _make_layout(title):
         "yaxis": {"gridcolor": "#2a2a4a", "title": {"text": "Query Time (seconds)"}},
         "showlegend": True,
         "legend": {
-            "orientation": "v",
-            "x": 1.02, "y": 1, "xanchor": "left", "yanchor": "top",
+            "orientation": "h",
+            "x": 0.5, "y": -0.15, "xanchor": "center", "yanchor": "top",
             "bgcolor": "rgba(22,33,62,0.9)", "bordercolor": "#2a2a4a",
             "borderwidth": 1, "font": {"size": 12, "color": "#e0e0e0"},
         },
-        "margin": {"t": 80, "b": 80, "l": 70, "r": 250},
+        "margin": {"t": 80, "b": 120, "l": 70, "r": 30},
     }
 
 
